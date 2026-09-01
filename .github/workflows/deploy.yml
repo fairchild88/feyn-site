@@ -1,0 +1,63 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [content-updated]
+  workflow_dispatch:
+    inputs:
+      content_ref:
+        description: feyn-content branch, tag, or commit
+        required: false
+        default: main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feyn-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out framework
+        uses: actions/checkout@v4
+
+      - name: Select content revision
+        id: content
+        shell: bash
+        env:
+          DISPATCH_SHA: ${{ github.event.client_payload.content_sha }}
+          MANUAL_REF: ${{ inputs.content_ref }}
+        run: echo "ref=${DISPATCH_SHA:-${MANUAL_REF:-main}}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out content
+        uses: actions/checkout@v4
+        with:
+          repository: fairchild88/feyn-content
+          ref: ${{ steps.content.outputs.ref }}
+          path: content
+          token: ${{ secrets.FEYN_CONTENT_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm content:check
+      - run: pnpm build
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config dist/server/wrangler.json
