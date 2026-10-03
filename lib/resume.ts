@@ -12,7 +12,7 @@ export function resumeMarkdown(locale: Locale) {
     '',
     'Arch & Build',
     '',
-    `Email: hi@feyn.cc`,
+    `${isZh ? '联系方式' : 'Contact'}: https://feyn.cc/${isZh ? 'links' : 'en/links'}/`,
     '',
     `## ${isZh ? '简介' : 'Summary'}`,
     '',
