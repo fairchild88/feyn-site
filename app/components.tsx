@@ -1,20 +1,21 @@
 import { nav, site } from '@/lib/site';
 import type { Locale } from '@/lib/resume';
 import { EmailContact } from './email-contact';
+import { LanguageSwitch } from './language-switch';
 
 export function LocaleRedirect({ locale }: { locale: Locale }) {
   const code = `(()=>{try{const c='${locale}',p=new URLSearchParams(location.search),q=p.get('lang');if(q==='zh'||q==='en'){localStorage.setItem('feyn-locale',q);history.replaceState(null,'',location.pathname)}const s=q||localStorage.getItem('feyn-locale'),l=(navigator.languages&&navigator.languages[0])||navigator.language||'',d=/^zh(?:-|$)/i.test(l)?'zh':'en',n=s||d;if(n!==c)location.replace(n==='zh'?'/?lang=zh':'/en/?lang=en')}catch{}})()`;
   return <script dangerouslySetInnerHTML={{ __html: code }} />;
 }
 
-export function Shell({ locale='zh', children }: { locale?: Locale; children: React.ReactNode }) {
+export function Shell({ locale='zh', alternateHref, children }: { locale?: Locale; alternateHref?: string; children: React.ReactNode }) {
   const alt = locale === 'zh' ? { label: 'EN', href: '/en/?lang=en' } : { label: 'ZH', href: '/?lang=zh' };
   return <main>
     <header className="site-header">
       <a className="home-link" href={locale === 'zh' ? '/' : '/en/'} aria-label={locale === 'zh' ? 'Feyn 首页' : 'Feyn home'}>Feyn</a>
       <nav aria-label={locale === 'zh' ? '主要导航' : 'Primary navigation'}>
         {nav[locale].map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
-        <a href={alt.href}>{alt.label}</a>
+        <LanguageSwitch locale={locale === 'zh' ? 'en' : 'zh'} href={alternateHref ?? alt.href} />
       </nav>
     </header>
     {children}

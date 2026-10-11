@@ -28,6 +28,8 @@ FEYN_CONTENT_DIR=/absolute/path/to/feyn-content pnpm build
 
 公开邮箱从内容仓库 `links/index.md` 的 `email` 字段读取，首页、链接页与页脚统一使用点击显示组件。初始页面只传递编码值，点击后才还原邮箱并提供复制和写邮件入口；Markdown 简历与 `llms.txt` 只提供联系方式页面链接。该方案用于减少简单脚本采集，能够解码或模拟点击的爬虫仍可能获取地址。
 
+文章可在 Frontmatter 中设置 `encodedContactEmail`（邮箱地址的 UTF-8 Base64 编码），在正文末尾展示独立的点击显示联系入口。生成器验证编码与邮箱格式；正文、摘要及初始页面不写入明文地址。
+
 ## 发布流程
 
 内容写作与发布可使用 `$feyn-content-publish`，覆盖 Blog、Projects、首页、简历和公开链接，包括草稿预览与上线验证。技能在 Obsidian 的 `AUOO/Personal/feyn-content-publish/` 中独立维护，通过 Codex 的 skills 目录链接调用。

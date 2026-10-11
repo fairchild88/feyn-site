@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { Buffer } from 'node:buffer';
 import matter from 'gray-matter';
 import { marked } from 'marked';
 
@@ -27,6 +28,16 @@ function text(value, field, file) {
 function textList(value, field, file) {
   if (!Array.isArray(value) || value.some((item) => typeof item !== 'string' || !item.trim())) fail(`${field} must be a string list in ${file}`);
   return value.map((item) => item.trim());
+}
+
+function contactEmail(value, file) {
+  if (value == null) return null;
+  const encoded = text(value, 'encodedContactEmail', file);
+  const decoded = Buffer.from(encoded, 'base64').toString('utf8');
+  if (Buffer.from(decoded, 'utf8').toString('base64') !== encoded || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(decoded)) {
+    fail(`encodedContactEmail must encode an email address in ${file}`);
+  }
+  return encoded;
 }
 
 function date(value) {
@@ -100,6 +111,7 @@ function collection(kind, locale) {
         repository: item.data.repository ? String(item.data.repository) : null,
         website: item.data.website ? String(item.data.website) : null,
         draft,
+        encodedContactEmail: contactEmail(item.data.encodedContactEmail, item.file),
         html: marked.parse(item.body),
       };
     })
@@ -115,7 +127,7 @@ const generated = {
   projects: { zh: collection('projects', 'zh'), en: collection('projects', 'en') },
 };
 
-const source = `// Generated from feyn-content. Do not edit.\n\nexport type ContentEntry = { slug: string; locale: 'zh' | 'en'; title: string; description: string; publishedAt: string | null; updatedAt: string | null; tags: string[]; status: string | null; stack: string[]; repository: string | null; website: string | null; draft: boolean; html: string };\nexport type Profile = { locale: 'zh' | 'en'; name: string; alternateName: string; eyebrow: string; role: string; intro: string; statements: string[]; resumeCta: string };\nexport type Resume = { locale: 'zh' | 'en'; title: string; summary: string; experience: { period: string; company: string; title: string; detail: string }[] };\nexport type Content = { profiles: { zh: Profile; en: Profile }; resumes: { zh: Resume; en: Resume }; links: { email: string; items: { label: string; handle: string; href: string }[] }; blog: { zh: ContentEntry[]; en: ContentEntry[] }; projects: { zh: ContentEntry[]; en: ContentEntry[] } };\n\nexport const content: Content = ${JSON.stringify(generated, null, 2)};\n`;
+const source = `// Generated from feyn-content. Do not edit.\n\nexport type ContentEntry = { slug: string; locale: 'zh' | 'en'; title: string; description: string; publishedAt: string | null; updatedAt: string | null; tags: string[]; status: string | null; stack: string[]; repository: string | null; website: string | null; draft: boolean; encodedContactEmail: string | null; html: string };\nexport type Profile = { locale: 'zh' | 'en'; name: string; alternateName: string; eyebrow: string; role: string; intro: string; statements: string[]; resumeCta: string };\nexport type Resume = { locale: 'zh' | 'en'; title: string; summary: string; experience: { period: string; company: string; title: string; detail: string }[] };\nexport type Content = { profiles: { zh: Profile; en: Profile }; resumes: { zh: Resume; en: Resume }; links: { email: string; items: { label: string; handle: string; href: string }[] }; blog: { zh: ContentEntry[]; en: ContentEntry[] }; projects: { zh: ContentEntry[]; en: ContentEntry[] } };\n\nexport const content: Content = ${JSON.stringify(generated, null, 2)};\n`;
 if (!process.argv.includes('--check')) {
   fs.mkdirSync(path.dirname(outputFile), { recursive: true });
   fs.writeFileSync(outputFile, source);

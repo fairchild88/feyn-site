@@ -1,3 +1,6 @@
+import type { Locale } from '@/lib/resume';
+import { EmailContact } from './email-contact';
+
 type Entry = {
   slug: string;
   title: string;
@@ -6,6 +9,8 @@ type Entry = {
   updatedAt: string | null;
   tags: readonly string[];
   status: string | null;
+  locale?: Locale;
+  encodedContactEmail?: string | null;
 };
 
 export function ContentIndex({ entries, basePath, emptyTitle, emptyBody, rss }: {
@@ -28,5 +33,10 @@ export function Article({ entry }: { entry: Entry & { html: string } }) {
   return <article className="article">
     <header><p className="eyebrow">{entry.publishedAt ?? entry.status ?? ''}</p><h1>{entry.title}</h1><p>{entry.description}</p></header>
     <div className="article-body" dangerouslySetInnerHTML={{ __html: entry.html }} />
+    {entry.encodedContactEmail ? <section className="article-contact">
+      <h2>{entry.locale === 'en' ? 'Get in touch' : '联系'}</h2>
+      <p>{entry.locale === 'en' ? 'Tell us about a project or an idea.' : '欢迎聊聊你的想法和项目。'}</p>
+      <EmailContact encodedEmail={entry.encodedContactEmail} locale={entry.locale} />
+    </section> : null}
   </article>;
 }

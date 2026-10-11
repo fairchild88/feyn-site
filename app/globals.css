@@ -70,6 +70,7 @@ li { margin: 5px 0; }
 .content-meta { margin-bottom: 4px; color: var(--muted); font-size: 14px; }
 .content-tags { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--muted); font-size: 14px; }
 .article { margin-bottom: 40px; }
+.article-contact { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); }
 .article header { margin-bottom: 30px; }
 .article header > p:last-child { color: var(--muted); }
 .article-body h2:first-child { margin-top: 0; }
