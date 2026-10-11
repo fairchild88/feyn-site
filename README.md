@@ -43,7 +43,17 @@ FEYN_CONTENT_DIR=/absolute/path/to/feyn-content pnpm build
 本仓库 Actions 需要：
 
 - `FEYN_CONTENT_TOKEN`：仅对私有 `feyn-content` 有 Contents Read 权限的 fine-grained PAT。
-- `CLOUDFLARE_API_TOKEN`：仅允许目标 Worker 部署的 Cloudflare Token。
+- `CLOUDFLARE_API_TOKEN`：Cloudflare Account API Token，选择 Specified Workers → `feyn-cc` → Individual Workers Editor。
 - `CLOUDFLARE_ACCOUNT_ID`：Cloudflare Account ID。
 
 内容仓库需要 `SITE_DISPATCH_TOKEN`：仅对 `feyn-site` 有 Contents Write 权限的 fine-grained PAT。不要把密钥写入 Markdown、源码或 Obsidian。
+
+### 排查自动发布
+
+先查看 `feyn-content` 的 Publish content 运行，再查看 `feyn-site` 的 Build and deploy 运行。通知成功只表示已请求发布，网站运行成功才表示部署完成。两份工作流会明确报告缺少的 secret；网站运行摘要会记录程序和内容的实际 commit，部署后检查中英文首页是否可访问。
+
+- 通知失败：在 **内容仓库** 设置 `SITE_DISPATCH_TOKEN`，不要用该仓库默认的 `GITHUB_TOKEN` 代替跨仓库凭据。
+- Cloudflare 返回 `10000` 或 `9109`：检查 token 是否有效，是否授权 `feyn-cc`，以及账户 ID 是否匹配。创建替代部署 token 后更新 **网站仓库** 的 `CLOUDFLARE_API_TOKEN`。
+- 内容 checkout 失败：检查 **网站仓库** 的 `FEYN_CONTENT_TOKEN` 是否仍有私有内容仓库的读取权限。
+
+修复凭据后可手动运行内容仓库的 Publish content，验证通知和部署整条链路；也可手动运行网站仓库的 Build and deploy，指定已发布内容的 `content_ref`。设置 token 到期时间时，需在到期前更新对应 secret。

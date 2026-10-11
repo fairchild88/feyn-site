@@ -23,6 +23,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Check deployment credentials
+        shell: bash
+        env:
+          FEYN_CONTENT_TOKEN: ${{ secrets.FEYN_CONTENT_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          missing=0
+          for name in FEYN_CONTENT_TOKEN CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing repository secret: $name"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
       - name: Check out framework
         uses: actions/checkout@v4
 
@@ -41,6 +57,14 @@ jobs:
           ref: ${{ steps.content.outputs.ref }}
           path: content
           token: ${{ secrets.FEYN_CONTENT_TOKEN }}
+
+      - name: Record deployed revisions
+        shell: bash
+        run: |
+          {
+            echo "Framework: $(git rev-parse HEAD)"
+            echo "Content: $(git -C content rev-parse HEAD)"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - uses: pnpm/action-setup@v4
         with:
@@ -61,3 +85,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy --config dist/server/wrangler.json
+
+      - name: Check production pages
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-all-errors --output /dev/null https://feyn.cc/
+          curl --fail --silent --show-error --retry 3 --retry-all-errors --output /dev/null https://feyn.cc/en/
