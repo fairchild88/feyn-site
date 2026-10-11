@@ -43,7 +43,7 @@ FEYN_CONTENT_DIR=/absolute/path/to/feyn-content pnpm build
 本仓库 Actions 需要：
 
 - `FEYN_CONTENT_TOKEN`：仅对私有 `feyn-content` 有 Contents Read 权限的 fine-grained PAT。
-- `CLOUDFLARE_API_TOKEN`：Cloudflare Account API Token，选择 Specified Workers → `feyn-cc` → Individual Workers Editor。
+- `CLOUDFLARE_API_TOKEN`：Cloudflare Account API Token，包含两条策略：Specified Workers → `feyn-cc` → Individual Workers Editor；Entire Account → Workers Metadata Read-Only。后者用于 Wrangler 查询账户的 `workers.dev` 子域名；编辑权限只限 `feyn-cc`。
 - `CLOUDFLARE_ACCOUNT_ID`：Cloudflare Account ID。
 
 内容仓库需要 `SITE_DISPATCH_TOKEN`：仅对 `feyn-site` 有 Contents Write 权限的 fine-grained PAT。不要把密钥写入 Markdown、源码或 Obsidian。
@@ -57,3 +57,5 @@ FEYN_CONTENT_DIR=/absolute/path/to/feyn-content pnpm build
 - 内容 checkout 失败：检查 **网站仓库** 的 `FEYN_CONTENT_TOKEN` 是否仍有私有内容仓库的读取权限。
 
 修复凭据后可手动运行内容仓库的 Publish content，验证通知和部署整条链路；也可手动运行网站仓库的 Build and deploy，指定已发布内容的 `content_ref`。设置 token 到期时间时，需在到期前更新对应 secret。
+
+`SITE_DISPATCH_TOKEN` 对应的专用 GitHub token 为 `feyn-content-site-dispatch`，到期日为 2027-10-11；请在此日期前更新内容仓库的 secret。
